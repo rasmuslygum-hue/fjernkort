@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fjernkort</title>
+<meta name="description" content="Træk et kort sammen, også når I ikke sidder i samme rum. Send linket. I ser det samme kort.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%236b1d3a'/%3E%3Cpath d='M8 6h12a2 2 0 0 1 2 2v16l-8-3-8 3V8a2 2 0 0 1 2-2z' fill='%23f6e8ef'/%3E%3C/svg%3E">
+<style>
+  :root { --bg:#140910; --ink:#f6e8ef; --muted:#c9a0b0; --accent:#e23d6b; --soft:#ffb4c8; --line:#5a2840; --card:#1c0c16; }
+  * { box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+  body {
+    margin:0; color:var(--ink);
+    background:
+      radial-gradient(900px 420px at 80% -10%, #4a1830 0%, transparent 55%),
+      radial-gradient(700px 380px at -10% 20%, #2a1020 0%, transparent 50%),
+      var(--bg);
+    font-family: Georgia, "Times New Roman", serif;
+  }
+  a { color:var(--soft); }
+  .top {
+    display:flex; align-items:center; justify-content:space-between;
+    width:min(1040px, calc(100% - 2rem)); margin:0 auto; padding:1.1rem 0 .4rem;
+  }
+  .logo { color:var(--ink); text-decoration:none; letter-spacing:.16em; text-transform:uppercase; font-size:.92rem; }
+  nav { display:flex; gap:1rem; font-size:.85rem; }
+  nav a { color:var(--muted); text-decoration:none; }
+  .wrap { width:min(1040px, calc(100% - 2rem)); margin:0 auto; padding-bottom:3rem; }
+  .hero { padding:1.4rem 0 1rem; max-width:680px; }
+  .kicker { color:var(--accent); letter-spacing:.16em; text-transform:uppercase; font-size:.72rem; margin:0 0 .55rem; }
+  h1 { font-weight:normal; font-size:clamp(2rem, 5vw, 3.4rem); line-height:1.08; margin:0 0 .7rem; }
+  .lede { color:var(--soft); font-size:1.08rem; line-height:1.45; margin:0 0 1rem; }
+  .steps { display:grid; grid-template-columns:repeat(3, 1fr); gap:.7rem; margin:0; padding:0; list-style:none; }
+  .steps li { background:rgba(255,255,255,.03); border:1px solid var(--line); border-radius:14px; padding:.75rem .8rem; color:var(--muted); font-size:.92rem; line-height:1.35; }
+  .steps b { display:block; color:var(--ink); font-weight:normal; margin-bottom:.2rem; }
+  #login, .play, .chat, .rules { }
+  .panel {
+    margin-top:1.3rem; background:rgba(20,8,14,.72); border:1px solid var(--line);
+    border-radius:22px; padding:1rem 1rem 1.15rem;
+  }
+  h2 { font-weight:normal; font-size:1.35rem; margin:.2rem 0 .35rem; }
+  .sub { color:var(--soft); font-size:.92rem; margin:0 0 .8rem; }
+  input {
+    width:100%; max-width:320px; margin:.28rem 0; display:block;
+    background:#2a1220; color:var(--ink); border:1px solid #7a3a52; border-radius:999px;
+    padding:.75rem 1rem; font-size:1rem; font-family:inherit;
+  }
+  .join-row { display:flex; flex-wrap:wrap; gap:.4rem; align-items:center; margin-top:.55rem; }
+  .modes { display:flex; gap:.35rem; justify-content:flex-start; flex-wrap:wrap; margin:.2rem 0 .9rem; }
+  .modes button { padding:.4rem .65rem; font-size:.78rem; }
+  .modes button.on { outline:2px solid var(--soft); color:white; }
+  .deck { height:250px; border-radius:18px; position:relative; perspective:900px; margin-bottom:.8rem; max-width:460px; }
+  .card {
+    position:absolute; inset:0; border-radius:18px; display:flex; align-items:center; justify-content:center;
+    padding:1.45rem; backface-visibility:hidden; transition:transform .55s ease;
+    box-shadow:0 18px 40px rgba(0,0,0,.35); text-align:center;
+  }
+  .back { background:repeating-linear-gradient(135deg, #6b1d3a 0 12px, #4a1228 12px 24px); border:1px solid #ff7aa2; }
+  .back span { letter-spacing:.18em; text-transform:uppercase; font-size:.88rem; }
+  .front {
+    background:linear-gradient(180deg, #3a1528, #1c0c16);
+    border:1px solid #e23d6b; transform:rotateY(180deg); flex-direction:column; gap:.65rem;
+  }
+  .deck.show .back { transform:rotateY(180deg); }
+  .deck.show .front { transform:rotateY(0deg); }
+  .tag { font-size:.7rem; letter-spacing:.14em; text-transform:uppercase; color:var(--accent); }
+  .text { font-size:1.16rem; line-height:1.38; }
+  .who { font-size:.78rem; color:var(--soft); }
+  button {
+    background:var(--accent); color:white; border:0; border-radius:999px; padding:.78rem 1.15rem;
+    font-size:1rem; font-family:inherit; cursor:pointer;
+  }
+  button.ghost { background:transparent; color:var(--soft); border:1px solid #7a3a52; }
+  .meta { margin-top:.7rem; color:var(--muted); font-size:.84rem; }
+  .note { margin:.7rem 0 0; font-size:.8rem; color:#a88896; line-height:1.4; }
+  .chat { text-align:left; display:flex; flex-direction:column; min-height:280px; }
+  .chat h2 { font-size:.78rem; letter-spacing:.14em; text-transform:uppercase; color:var(--soft); margin:0 0 .4rem; }
+  .chatlog {
+    flex:1; min-height:200px; height:240px; overflow-y:auto; background:#1a0c14; border:1px solid var(--line); border-radius:14px;
+    padding:.5rem .6rem; display:flex; flex-direction:column; gap:.35rem;
+  }
+  .bubble { max-width:88%; background:#2a1522; border-radius:12px; padding:.4rem .6rem; }
+  .bubble b { display:block; font-size:.68rem; color:var(--accent); font-weight:normal; letter-spacing:.04em; }
+  .bubble span { font-size:.95rem; line-height:1.35; }
+  .bubble.mine { margin-left:auto; background:#4a1830; }
+  .row { display:flex; gap:.4rem; margin-top:.45rem; }
+  .row input { flex:1; max-width:none; margin:0; border-radius:999px; font-size:16px; }
+  .row button { margin:0; }
+  .tabs { display:none; }
+  .hidden { display:none !important; }
+  .invite { color:var(--soft); margin:0 0 .6rem; }
+  .rules { margin-top:1.4rem; display:grid; grid-template-columns:1.1fr .9fr; gap:1rem; }
+  .rules ul { margin:.3rem 0 0; padding-left:1.1rem; color:var(--muted); line-height:1.5; }
+  footer { width:min(1040px, calc(100% - 2rem)); margin:0 auto 1.4rem; color:#8d7080; font-size:.78rem; }
+  @media (max-width: 800px) {
+    .steps, .rules { grid-template-columns:1fr; }
+    nav { gap:.7rem; }
+    .tabs {
+      display:flex; gap:.45rem; position:sticky; top:0; z-index:3;
+      background:#140910; padding:.35rem 0 .55rem;
+    }
+    .tabs button.unread { box-shadow:0 0 0 2px var(--soft); }
+    body:not(.phone-chat) .chat { display:none; }
+    body.phone-chat { height:100dvh; overflow:hidden; }
+    body.phone-chat .top, body.phone-chat .hero, body.phone-chat .rules, body.phone-chat footer { display:none; }
+    body.phone-chat .wrap { height:100dvh; display:flex; flex-direction:column; width:min(480px, calc(100% - 1.2rem)); padding-bottom:0; }
+    body.phone-chat .panel { flex:1; min-height:0; display:flex; flex-direction:column; margin-top:.4rem; }
+    body.phone-chat #game { flex:1; min-height:0; display:flex; flex-direction:column; }
+    body.phone-chat .play, body.phone-chat .panel > .note { display:none; }
+    body.phone-chat .chat { flex:1; min-height:0; }
+    body.phone-chat .chatlog { height:auto; min-height:0; }
+    body.phone-chat .row { position:sticky; bottom:0; padding-bottom:calc(.2rem + env(safe-area-inset-bottom)); background:#140910; }
+  }
+  @media (min-width: 801px) {
+    #game { display:grid; grid-template-columns:minmax(300px, 1.05fr) minmax(280px, .95fr); gap:1.1rem 1.4rem; align-items:start; }
+    #game .modes, #game .play { grid-column:1; }
+    .deck { height:300px; }
+    .chatlog { height:min(460px, 52vh); }
+  }
+</style>
+</head>
+<body>
+  <header class="top">
+    <a class="logo" href="#top">Fjernkort</a>
+    <nav>
+      <a href="#sadan">Sådan</a>
+      <a href="#spil">Spil</a>
+      <a href="#regler">Regler</a>
+    </nav>
+  </header>
+  <main class="wrap" id="top">
+    <section class="hero" id="sadan">
+      <p class="kicker">Hjemmeside</p>
+      <h1>Træk et kort, også når I ikke er sammen.</h1>
+      <p class="lede">Send linket til siden. Den anden åbner det, skriver sit navn og er inde i samme rum. I ser ét kort ad gangen og kan skrive til hinanden.</p>
+      <ol class="steps">
+        <li><b>1. Åbn siden</b> på telefon eller computer.</li>
+        <li><b>2. Samme rum</b> via det link, du sender.</li>
+        <li><b>3. Træk</b> ét kort. Nej er nej.</li>
+      </ol>
+    </section>
+
+    <section class="panel" id="spil">
+      <div id="login">
+        <h2>Gå ind i et rum</h2>
+        <p class="sub">Lav et rum og send linket. Eller brug det rum, du er inviteret til.</p>
+        <p class="invite hidden" id="invite"></p>
+        <input id="name" placeholder="Dit navn" maxlength="20" autocomplete="nickname">
+        <input id="room" placeholder="Rumkode, f.eks. nat-42" maxlength="24" autocomplete="off">
+        <div class="join-row">
+          <button id="join" type="button">Gå ind</button>
+          <button id="newRoom" class="ghost" type="button">Lav et rum</button>
+        </div>
+        <p class="note">I skal begge have net. På telefonen ligger chatten under Chat.</p>
+      </div>
+
+      <div id="game" class="hidden">
+        <div class="tabs" id="tabs">
+          <button type="button" class="ghost on" id="showKort">Kort</button>
+          <button type="button" class="ghost" id="showChat">Chat</button>
+        </div>
+        <div class="play">
+          <div class="modes">
+            <button class="ghost on" type="button" data-mode="alle">Alle</button>
+            <button class="ghost" type="button" data-mode="bloed">Blød</button>
+            <button class="ghost" type="button" data-mode="kink">Kink</button>
+            <button class="ghost" type="button" data-mode="sandhed">Sandhed</button>
+            <button class="ghost" type="button" data-mode="par">Par</button>
+            <button class="ghost" type="button" data-mode="ude">Ude</button>
+            <button class="ghost" type="button" data-mode="senere">Senere</button>
+            <button class="ghost" type="button" data-mode="flere">Flere</button>
+          </div>
+          <div class="deck" id="deck">
+            <div class="card back"><span>Træk et kort</span></div>
+            <div class="card front">
+              <div class="tag" id="tag">—</div>
+              <div class="text" id="text">Venter</div>
+              <div class="who" id="who"></div>
+            </div>
+          </div>
+          <button id="draw" type="button">Træk kort</button>
+          <button class="ghost" id="copy" type="button">Kopiér link</button>
+          <div class="meta" id="meta"></div>
+        </div>
+        <div class="chat">
+          <h2>Skriv sammen</h2>
+          <div class="chatlog" id="chat"></div>
+          <form class="row" id="chatForm">
+            <input id="chatInput" placeholder="Skriv en besked" maxlength="240" autocomplete="off">
+            <button type="submit">Send</button>
+          </form>
+        </div>
+        <p class="note">Kun den, der har linket, kan se rummet. Brug en kode, kun I kender.</p>
+      </div>
+    </section>
+
+    <section class="rules" id="regler">
+      <div>
+        <h2>Regler</h2>
+        <ul>
+          <li>Ét kort ad gangen. Den der trækker, læser højt eller skriver det.</li>
+          <li>Nej er nej. Et stop-ord gælder med det samme.</li>
+          <li>Ude-kort gælder, mens andre kan se jer. Konsekvenser er frivillige.</li>
+          <li>Senere-kort gemmes til i aften, i morgen eller næste gang I er alene.</li>
+        </ul>
+      </div>
+      <div>
+        <h2>Bunkerne</h2>
+        <ul>
+          <li>Blød, kink, sandhed og par.</li>
+          <li>Ude, med konsekvenser.</li>
+          <li>Senere, når I ikke skal gøre det nu.</li>
+          <li>Flere, når I er tre eller mere.</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+  <footer>Fjernkort er en hjemmeside. 18+. Nej er nej.</footer>
+
+<script src="https://unpkg.com/mqtt@5.10.1/dist/mqtt.min.js"></script>
+<script>if(!window.mqtt){document.write('<script src="https://cdn.jsdelivr.net/npm/mqtt@5.10.1/dist/mqtt.min.js"><\\/script>');}</script>
+<script>
+const bloed = [
+  ["Blød","Kys halsen i 20 sekunder, næste gang I ses."],
+  ["Blød","Send et kys-emoji og sig hvor det skulle have landet."],
+  ["Blød","Beskriv et kys, du vil have i aften."],
+  ["Blød","Tag et billede af det tøj, du har på nu."],
+  ["Blød","Hvisk den frækkeste tanke i en stemmebesked."],
+  ["Blød","Vælg ét stykke tøj, den anden skal tage af senere."],
+  ["Blød","Skriv hvor du vil røres først."],
+  ["Blød","Hold telefonen mod halsen og send lyden af et kys."],
+  ["Blød","Beskriv det tøj, du helst ser dem uden."],
+  ["Blød","Send et spejlbillede, kun kraveben og mund."]
+];
+const kink = [
+  ["Kink","Skriv en ordre. Den anden svarer “ja” og gør det, når I er alene."],
+  ["Kink","Vælg noget I kan binde med næste gang. Send et billede af det."],
+  ["Kink","Du må ikke røre dig selv, før den anden siger til."],
+  ["Kink","Beskriv 10 slag. Tæl dem i en besked, når det er gjort."],
+  ["Kink","Sig “må jeg?” før næste frække besked."],
+  ["Kink","Edging i aften: stop to gange, og skriv når du stopper."],
+  ["Kink","“Ja, sir/frue” i de næste tre beskeder."],
+  ["Kink","Vælg en stilling til næste gang. Den anden må ikke ændre den."],
+  ["Kink","En zone er forbudt i aften. Skriv hvilken."],
+  ["Kink","Send en ordre på præcis 8 ord."]
+];
+const sandhed = [
+  ["Sandhed","Hvad er det frækkeste, du har tænkt på i dag?"],
+  ["Sandhed","Hvor vil du helst kysses, som ingen spørger om?"],
+  ["Sandhed","Hvilken fantasi har du ikke sagt højt endnu?"],
+  ["Sandhed","Hvad tænder dig mere: at bestemme eller at adlyde?"],
+  ["Sandhed","Hvad er et ja, du stadig er lidt nervøs for?"],
+  ["Sandhed","Hvad har du lyst til, men ikke bedt om?"],
+  ["Sandhed","Hvilken lyd vil du gerne høre mere af?"],
+  ["Sandhed","Hvis I havde 10 minutter uden afbrydelse, hvad så?"],
+  ["Sandhed","Hvad må den anden aldrig gøre?"],
+  ["Sandhed","Hvilket ord vil du høre, mens det sker?"]
+];
+const par = [
+  ["Par","Skriv præcis hvor du vil have tungen, næste gang."],
+  ["Par","Beskriv hvordan du vil sidde overskrævs."],
+  ["Par","Send en sætning, der starter med “jeg vil have dig til”."],
+  ["Par","Vælg: mund, hænder eller skød. Den anden siger ja eller nej."],
+  ["Par","Fortæl hvordan du vil blive taget, i tre linjer."],
+  ["Par","Aftal 5 minutter i aften, hvor kun den ene bestemmer."],
+  ["Par","Sig hvad du har på under tøjet. Eller at du ikke har noget."],
+  ["Par","Planlæg de første 2 minutter, når I låser døren."],
+  ["Par","En af jer må ikke komme i aften. Trækkeren vælger hvem."],
+  ["Par","Beskriv et kys med hår grebet i hånden."]
+];
+const ude = [
+  ["Ude","Hånd på låret under bordet, indtil tjeneren er gået."],
+  ["Ude","Hvisk én fræk sætning, mens I står i kø."],
+  ["Ude","Intet undertøj resten af turen. Skriv det kun her."],
+  ["Ude","Kys i en elevator, kun indtil døren åbner."],
+  ["Ude","Send en besked fra toilettet: hvad du vil, når I er hjemme."],
+  ["Ude","Foden mod deres ben under bordet i to minutter."],
+  ["Ude","Vælg et kodeord. Når det siges, skylder I et kys ved næste hjørne."],
+  ["Ude","Gå én gade med hånden inden for jakken."],
+  ["Ude · Konsekvens","Sagde du nej: send et billede fra toilettet, kun til den anden."],
+  ["Ude · Konsekvens","Glemte du kodeordet: kys på næste hjørne, 10 sekunder."],
+  ["Ude · Konsekvens","Tabte du kortet: intet undertøj resten af aftenen."],
+  ["Ude · Konsekvens","Brød du reglen: den anden vælger ét tøjstykke, du tager af i taxaen."]
+];
+const senere = [
+  ["Senere","Send en fræk besked kl. 21, uden forklaring."],
+  ["Senere","Gå i seng uden undertøj. Skriv det først, når lyset er slukket."],
+  ["Senere","Den anden vælger, hvad du har på under tøjet i aften."],
+  ["Senere","Skriv tre ting du vil gøres ved dig."],
+  ["Senere","Tag et billede kun til den anden. Send det i morgen formiddag."],
+  ["Senere","Ingen orgasme før næste gang I ses."],
+  ["Senere","Stemmebesked: én sætning du ikke tør sige højt."],
+  ["Senere","Book næste gang I er alene, før I lægger på."],
+  ["Senere","I morgen tidlig: “jeg tænkte på dig” plus hvor."],
+  ["Senere","Gem kortet. Det gælder først, når døren er låst."]
+];
+const flere = [
+  ["Flere","Vælg én fra rummet, der skal kysse dig i 20 sekunder næste gang."],
+  ["Flere","Skriv navnet på den, du vil have i skødet."],
+  ["Flere","Sandhed til begge: den frækkeste ting med mere end én."],
+  ["Flere","Peg på én, der bestemmer næste kys."],
+  ["Flere","Aftal et nej for i aften, så de andre kender det."],
+  ["Flere","Vælg én der giver ordre, og én der udfører, næste gang I er tre."],
+  ["Flere","Beskriv et kys fra to personer samtidig."],
+  ["Flere","Book næste gang mindst tre ses."]
+];
+const decks = { bloed, kink, sandhed, par, ude, senere, flere };
+let mode = "alle", room = "", me = "", client = null, pile = [], seen = new Set(), seenChat = new Set(), players = new Set(), outbox = [];
+const $ = id => document.getElementById(id);
+function hash(s){ let h = 2166136261; for (let i=0;i<s.length;i++){ h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
+function rng(seed){ let a = seed || 1; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function shuffle(list, seed){
+  const b = list.slice(), r = rng(seed);
+  for (let i=b.length-1;i>0;i--){ const j = Math.floor(r()*(i+1)); [b[i],b[j]] = [b[j],b[i]]; }
+  return b;
+}
+function source(){ return mode==="alle" ? Object.values(decks).flat() : decks[mode]; }
+function rebuild(){ pile = shuffle(source(), hash(room + "|" + mode)); seen.clear(); $("meta").textContent = pile.length + " kort · rum " + room; }
+function topic(){ return "fraekke-kort/" + room.replace(/[^a-z0-9\-]/gi,"").toLowerCase(); }
+function siteLink(code){
+  const u = new URL(location.href);
+  u.hash = "";
+  u.searchParams.set("rum", code);
+  return u.toString();
+}
+function show(card, by){
+  $("tag").textContent = card[0];
+  $("text").textContent = card[1];
+  $("who").textContent = by === me ? "Dit træk" : "Trukket af " + by;
+  const deck = $("deck");
+  deck.classList.remove("show");
+  void deck.offsetWidth;
+  deck.classList.add("show");
+}
+function log(line){
+  addChat({ id:"sys-"+Math.random().toString(16).slice(2), by:"Rum", text:line, system:true });
+}
+function addChat(msg){
+  if (seenChat.has(msg.id)) return;
+  seenChat.add(msg.id);
+  const row = document.createElement("div");
+  row.className = "bubble" + (msg.by === me ? " mine" : "");
+  const n = document.createElement("b");
+  n.textContent = msg.by;
+  const p = document.createElement("span");
+  p.textContent = msg.text;
+  row.append(n, p);
+  const box = $("chat");
+  box.append(row);
+  box.scrollTop = box.scrollHeight;
+  if (msg.by !== me && !document.body.classList.contains("phone-chat")) $("showChat").classList.add("unread");
+}
+function publish(obj){
+  const payload = JSON.stringify(obj);
+  if (client && client.connected) client.publish(topic(), payload);
+  else outbox.push(payload);
+}
+function flush(){
+  if (!client || !client.connected) return;
+  while (outbox.length) client.publish(topic(), outbox.shift());
+}
+function applyDraw(msg){
+  if (msg.mode && msg.mode !== mode) setMode(msg.mode, false);
+  if (seen.has(msg.id)) return;
+  seen.add(msg.id);
+  const card = pile[msg.index % pile.length];
+  show(card, msg.by);
+  log(msg.by + ": " + card[1]);
+}
+const q = new URLSearchParams(location.search);
+const h = new URLSearchParams(location.hash.replace(/^#/, ""));
+const fraLink = (q.get("rum") || h.get("rum") || "").trim().toLowerCase();
+if (fraLink){
+  $("room").value = fraLink;
+  $("invite").textContent = "Du er inviteret til rum " + fraLink + ".";
+  $("invite").classList.remove("hidden");
+}
+function nyKode(){
+  const ord = ["nat","rose","silke","vin","maane","kys","hotel","taxa","seng","dug"];
+  return ord[Math.floor(Math.random()*ord.length)] + "-" + Math.floor(10 + Math.random()*89);
+}
+$("newRoom").onclick = () => {
+  const kode = nyKode();
+  $("room").value = kode;
+  $("invite").textContent = "Rum " + kode + " er klar. Gå ind, og kopiér linket.";
+  $("invite").classList.remove("hidden");
+  $("name").focus();
+};
+$("join").onclick = () => {
+  me = ($("name").value || "Dig").trim();
+  room = ($("room").value || nyKode()).trim().toLowerCase();
+  if (!window.mqtt){ alert("Siden kunne ikke forbinde. Tjek nettet og genindlæs."); return; }
+  rebuild();
+  try { history.replaceState(null, "", siteLink(room)); } catch (e) {}
+  $("login").classList.add("hidden");
+  $("game").classList.remove("hidden");
+  const brokers = ["wss://broker.hivemq.com:8884/mqtt","wss://broker.emqx.io:8084/mqtt","wss://test.mosquitto.org:8081"];
+  let gen = 0;
+  function start(i){
+    const my = ++gen;
+    if (client){ try { client.removeAllListeners(); client.end(true); } catch(e){} }
+    client = mqtt.connect(brokers[i % brokers.length], {
+      clientId:"kort-"+Math.random().toString(16).slice(2),
+      reconnectPeriod: 2500,
+      connectTimeout: 8000,
+      keepalive: 20
+    });
+    const giveup = setTimeout(() => { if (my === gen && !client.connected) start(i + 1); }, 9000);
+    client.on("connect", () => {
+      if (my !== gen) return;
+      clearTimeout(giveup);
+      client.subscribe(topic());
+      flush();
+      client.publish(topic(), JSON.stringify({ type:"join", by:me, id:Math.random().toString(16).slice(2) }));
+      $("meta").textContent = "Online · rum " + room;
+    });
+    client.on("reconnect", () => { if (my === gen) $("meta").textContent = "Forbinder igen… beskeder gemmes"; });
+    client.on("error", () => {});
+    client.on("message", (_, buf) => {
+      if (my !== gen) return;
+      let msg; try { msg = JSON.parse(buf.toString()); } catch(e){ return; }
+      if (msg.type==="join"){
+        if (msg.by === me || players.has(msg.by)) return;
+        players.add(msg.by);
+        log(msg.by + " er på siden");
+        $("meta").textContent = "Online · " + (players.size + 1) + " på siden · rum " + room;
+      }
+      if (msg.type==="mode" && msg.mode!==mode){ setMode(msg.mode, false); }
+      if (msg.type==="draw") applyDraw(msg);
+      if (msg.type==="chat") addChat(msg);
+    });
+  }
+  start(0);
+  $("chatInput").focus();
+};
+function setPhoneView(chat){
+  document.body.classList.toggle("phone-chat", chat);
+  $("showKort").classList.toggle("on", !chat);
+  $("showChat").classList.toggle("on", chat);
+  if (chat){ $("showChat").classList.remove("unread"); $("chat").scrollTop = $("chat").scrollHeight; }
+}
+$("showKort").onclick = () => setPhoneView(false);
+$("showChat").onclick = () => setPhoneView(true);
+function setMode(next, announce){
+  mode = next;
+  document.querySelectorAll(".modes button").forEach(b => b.classList.toggle("on", b.dataset.mode===mode));
+  rebuild();
+  $("deck").classList.remove("show");
+  if (announce) publish({ type:"mode", mode, by:me });
+}
+document.querySelectorAll(".modes button").forEach(btn => {
+  btn.onclick = () => setMode(btn.dataset.mode, true);
+});
+$("draw").onclick = () => {
+  if (!pile.length) return;
+  const index = Math.floor(Math.random()*pile.length);
+  const msg = { type:"draw", id:Date.now()+"-"+Math.random().toString(16).slice(2), index, by:me, mode };
+  applyDraw(msg);
+  publish(msg);
+};
+$("chatForm").onsubmit = (e) => {
+  e.preventDefault();
+  const text = $("chatInput").value.trim();
+  if (!text) return;
+  const msg = { type:"chat", id:Date.now()+"-"+Math.random().toString(16).slice(2), by:me, text };
+  addChat(msg);
+  publish(msg);
+  $("chatInput").value = "";
+  $("meta").textContent = (client && client.connected)
+    ? "Sendt · rum " + room
+    : "Gemmes, indtil I er online igen";
+};
+$("copy").onclick = async () => {
+  const t = siteLink(room);
+  try { await navigator.clipboard.writeText(t); $("meta").textContent = "Link kopieret. Send det."; }
+  catch(e){ $("meta").textContent = t; }
+};
+</script>
+</body>
+</html>
